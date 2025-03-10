@@ -112,6 +112,14 @@ python main.py
 
 ## API Documentation
 
+For detailed API documentation, please see [API.md](API.md). This includes:
+- Complete endpoint specifications
+- Request/response formats
+- Authentication details
+- WebSocket support
+- Code examples
+- Development notes
+
 The API provides several endpoints:
 
 ### Chat Endpoints
