@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #374151;
+}
+
+/* Message styles */
+.message {
+    @apply p-4 rounded-lg max-w-[80%] mb-4;
+}
+
+.user-message {
+    @apply bg-primary text-gray-900 ml-auto;
+}
+
+.assistant-message {
+    @apply bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white mr-auto;
+}
+
+.error-message {
+    @apply bg-red-100 text-red-700 mx-auto;
+}
+
+/* Message content styling */
+.message p {
+    @apply mb-4 last:mb-0;
+}
+
+.message pre {
+    @apply bg-gray-800 text-gray-100 p-4 rounded-lg overflow-x-auto my-2;
+}
+
+.message code {
+    @apply font-mono text-sm;
+}
+
+.message ul, .message ol {
+    @apply pl-6 mb-4;
+}
+
+.message ul {
+    @apply list-disc;
+}
+
+.message ol {
+    @apply list-decimal;
+}
+
+.message blockquote {
+    @apply border-l-4 border-gray-300 dark:border-gray-600 pl-4 my-4 italic;
+}
+
+/* Message transitions */
+.message-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+.message-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+}
+
+/* Code block styling */
+pre {
+    background-color: #1a1a1a;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+code {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em;
+} 

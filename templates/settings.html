@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - LocalChat</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/settings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="h-full overflow-hidden">
+    <!-- Main navigation -->
+    <nav class="position-fixed top-0 z-50 w-100 shadow-md" style="background-color: var(--background-color); border-bottom: 1px solid var(--border-color);">
+        <div class="p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="d-flex flex-column mr-4">
+                        <span class="text-xl font-semibold" style="color: var(--text-primary);">LocalChat</span>
+                        <span class="text-sm" style="color: var(--text-secondary);">Powered by AI</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-4">
+                    <nav class="nav-links">
+                        <a href="/" class="nav-link">Chat</a>
+                        <a href="/documents" class="nav-link">Documents</a>
+                        <a href="/settings" class="nav-link active">Settings</a>
+                        <button id="themeToggle" class="theme-toggle">
+                            <i class="fas fa-moon"></i>
+                            <i class="fas fa-sun hidden"></i>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div style="margin-top: 120px; height: calc(100vh - 120px); overflow-y: auto;">
+        <div class="settings-container">
+            <div class="settings-header">
+                <h1>Settings</h1>
+                <p>Configure your LocalChat experience</p>
+            </div>
+
+            <form id="settingsForm">
+                <!-- Model Settings -->
+                <div class="settings-section">
+                    <h2>Model Settings</h2>
+                    
+                    <div class="setting-group">
+                        <h3>Default Model</h3>
+                        <div class="setting-item">
+                            <label for="defaultModel">Select the default model to use for new chats:</label>
+                            <select id="defaultModel" name="defaultModel" class="setting-input">
+                                <!-- Will be populated dynamically -->
+                                <option value="">Loading models...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <h3>Model Parameters</h3>
+                        <div class="setting-item">
+                            <label for="temperature">Temperature:</label>
+                            <div class="setting-row">
+                                <input type="range" id="temperatureSlider" min="0" max="2" step="0.1" value="0.7" class="setting-input">
+                                <input type="number" id="temperature" name="temperature" min="0" max="2" step="0.1" value="0.7" class="setting-input" style="width: 80px;">
+                            </div>
+                            <p class="description">Controls randomness: Lower values are more deterministic, higher values are more creative.</p>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="maxTokens">Max Tokens:</label>
+                            <input type="number" id="maxTokens" name="maxTokens" min="10" max="4096" value="2048" class="setting-input">
+                            <p class="description">Maximum number of tokens to generate in the response.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Interface Settings -->
+                <div class="settings-section">
+                    <h2>Interface Settings</h2>
+                    
+                    <div class="setting-item">
+                        <label for="darkMode">Dark Mode:</label>
+                        <div class="setting-row">
+                            <span style="color: var(--text-secondary);">Light</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="darkMode" name="darkMode">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span style="color: var(--text-secondary);">Dark</span>
+                        </div>
+                        <p class="description">Toggle between light and dark theme.</p>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <label for="fontSize">Font Size:</label>
+                        <select id="fontSize" name="fontSize" class="setting-input">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                        <p class="description">Adjust the font size for better readability.</p>
+                    </div>
+                </div>
+                
+                <!-- API Settings -->
+                <div class="settings-section">
+                    <h2>API Settings</h2>
+                    
+                    <div class="setting-item">
+                        <label for="apiEndpoint">Ollama API Endpoint:</label>
+                        <input type="text" id="apiEndpoint" name="apiEndpoint" value="http://localhost:11434" class="setting-input">
+                        <p class="description">The URL of your Ollama API endpoint.</p>
+                    </div>
+                </div>
+                
+                <div class="settings-actions">
+                    <button type="button" id="resetButton" class="btn btn-outline">Reset to Defaults</button>
+                    <button type="submit" id="saveButton" class="btn btn-primary">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">Settings saved successfully!</div>
+
+    <script src="/static/js/theme.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load settings
+            loadSettings();
+            
+            // Initialize event listeners
+            initializeEventListeners();
+            
+            // Load available models
+            loadModels();
+        });
+        
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                const settings = await response.json();
+                
+                // Apply settings to form
+                document.getElementById('defaultModel').value = settings.default_model || '';
+                document.getElementById('temperature').value = settings.temperature || 0.7;
+                document.getElementById('temperatureSlider').value = settings.temperature || 0.7;
+                document.getElementById('maxTokens').value = settings.max_tokens || 2048;
+                document.getElementById('apiEndpoint').value = settings.api_endpoint || 'http://localhost:11434';
+                
+                // Set dark mode toggle based on current theme
+                document.getElementById('darkMode').checked = document.documentElement.classList.contains('dark');
+                
+                // Set font size
+                document.getElementById('fontSize').value = settings.font_size || 'medium';
+                applyFontSize(settings.font_size || 'medium');
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+        
+        async function loadModels() {
+            try {
+                console.log("Loading models in settings...");
+                const response = await fetch('/api/models');
+                if (!response.ok) throw new Error('Failed to load models');
+                
+                const data = await response.json();
+                console.log("Models data in settings:", data);
+                
+                const modelSelect = document.getElementById('defaultModel');
+                modelSelect.innerHTML = '';
+                
+                // Check if data.models exists
+                if (!data.models) {
+                    console.error("No models property in response");
+                    modelSelect.innerHTML = '<option value="">No models available</option>';
+                    return;
+                }
+                
+                // Handle different response formats
+                let modelsList = data.models;
+                
+                // If models is an object with a models property (nested structure)
+                if (!Array.isArray(modelsList) && modelsList.models) {
+                    console.log("Found nested models structure");
+                    modelsList = modelsList.models;
+                }
+                
+                // Ensure modelsList is an array
+                if (!Array.isArray(modelsList)) {
+                    console.error("Models is not an array:", modelsList);
+                    modelSelect.innerHTML = '<option value="">No models available</option>';
+                    return;
+                }
+                
+                if (modelsList.length === 0) {
+                    console.log("Empty models list");
+                    modelSelect.innerHTML = '<option value="">No models available</option>';
+                    return;
+                }
+                
+                console.log("Processing models in settings:", modelsList);
+                
+                // Get default model
+                let defaultModel = data.default_model || '';
+                
+                // If default_model is nested in the models object
+                if (!defaultModel && data.models.default_model) {
+                    defaultModel = data.models.default_model;
+                }
+                
+                modelsList.forEach(model => {
+                    const option = document.createElement('option');
+                    
+                    // Handle both string models and object models
+                    const modelId = typeof model === 'object' ? (model.name || model.id) : model;
+                    const modelName = typeof model === 'object' ? (model.name || model.id) : model;
+                    
+                    option.value = modelId;
+                    option.textContent = modelName;
+                    
+                    // Select the default model
+                    if (modelId === defaultModel) {
+                        option.selected = true;
+                    }
+                    
+                    modelSelect.appendChild(option);
+                });
+                
+                console.log("Models loaded successfully in settings");
+            } catch (error) {
+                console.error('Error loading models in settings:', error);
+                const modelSelect = document.getElementById('defaultModel');
+                if (modelSelect) {
+                    modelSelect.innerHTML = '<option value="default">Default Model</option>';
+                }
+            }
+        }
+        
+        function initializeEventListeners() {
+            // Form submission
+            document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const settings = {
+                    default_model: document.getElementById('defaultModel').value,
+                    temperature: parseFloat(document.getElementById('temperature').value),
+                    max_tokens: parseInt(document.getElementById('maxTokens').value),
+                    api_endpoint: document.getElementById('apiEndpoint').value,
+                    font_size: document.getElementById('fontSize').value
+                };
+                
+                try {
+                    const response = await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(settings)
+                    });
+                    
+                    if (response.ok) {
+                        showNotification('Settings saved successfully!', 'success');
+                    } else {
+                        showNotification('Error saving settings', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error saving settings:', error);
+                    showNotification('Error saving settings', 'error');
+                }
+            });
+            
+            // Reset button
+            document.getElementById('resetButton').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                    resetSettings();
+                }
+            });
+            
+            // Dark mode toggle
+            document.getElementById('darkMode').addEventListener('change', function() {
+                toggleTheme();
+            });
+            
+            // Font size change
+            document.getElementById('fontSize').addEventListener('change', function() {
+                applyFontSize(this.value);
+            });
+            
+            // Temperature slider and input sync
+            const temperatureSlider = document.getElementById('temperatureSlider');
+            const temperatureInput = document.getElementById('temperature');
+            
+            temperatureSlider.addEventListener('input', function() {
+                temperatureInput.value = this.value;
+            });
+            
+            temperatureInput.addEventListener('input', function() {
+                temperatureSlider.value = this.value;
+            });
+        }
+        
+        async function resetSettings() {
+            try {
+                const response = await fetch('/api/settings/reset', {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    loadSettings();
+                    showNotification('Settings reset to defaults', 'success');
+                } else {
+                    showNotification('Error resetting settings', 'error');
+                }
+            } catch (error) {
+                console.error('Error resetting settings:', error);
+                showNotification('Error resetting settings', 'error');
+            }
+        }
+        
+        function applyFontSize(size) {
+            const root = document.documentElement;
+            
+            switch (size) {
+                case 'small':
+                    root.style.fontSize = '14px';
+                    break;
+                case 'medium':
+                    root.style.fontSize = '16px';
+                    break;
+                case 'large':
+                    root.style.fontSize = '18px';
+                    break;
+                default:
+                    root.style.fontSize = '16px';
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "localchat",
+  "version": "1.0.0",
+  "description": "A locally run chatbot that combines Ollama's LLM capabilities with RAG",
+  "scripts": {
+    "build:css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/main.css",
+    "watch:css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/main.css --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1"
+  }
+}
