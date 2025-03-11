@@ -21,8 +21,7 @@ if ! command -v ollama &> /dev/null; then
     echo "1. Visit https://ollama.ai"
     echo "2. Download and install Ollama for macOS"
     echo "3. After installation, run 'ollama serve' to start the Ollama server"
-    echo "4. Run 'ollama pull llama3.2:latest' to download the default model"
-    echo "5. Then run this setup script again"
+    echo "4. Run this setup script again"
     exit 1
 fi
 
@@ -35,11 +34,15 @@ if ! curl -s http://localhost:11434/api/tags >/dev/null; then
 fi
 
 # Check if llama3.2:latest model is available
+echo "Checking for llama3.2:latest model..."
 if ! curl -s http://localhost:11434/api/tags | grep -q "llama3.2:latest"; then
-    echo "The default 'llama3.2:latest' model is not downloaded. Please run:"
-    echo "    ollama pull llama3.2:latest"
-    echo "Then run this setup script again."
-    exit 1
+    echo "The default 'llama3.2:latest' model is not downloaded. Downloading now..."
+    echo "This may take a while depending on your internet connection..."
+    if ! ollama pull llama3.2:latest; then
+        echo "Failed to download llama3.2:latest model. Please check your internet connection and try again."
+        exit 1
+    fi
+    echo "Successfully downloaded llama3.2:latest model!"
 fi
 
 # Create and activate virtual environment
