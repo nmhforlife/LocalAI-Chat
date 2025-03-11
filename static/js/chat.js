@@ -5,6 +5,61 @@ let currentModel = null;
 let messageHistory = [];
 let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
 
+// Toast notification function
+function showToast(message, type = 'info', autoHide = true) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 14px;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        color: white;
+    `;
+
+    // Set background color based on type
+    switch (type) {
+        case 'success':
+            toast.style.backgroundColor = '#10B981';
+            break;
+        case 'error':
+            toast.style.backgroundColor = '#EF4444';
+            break;
+        case 'info':
+            toast.style.backgroundColor = '#3B82F6';
+            break;
+        default:
+            toast.style.backgroundColor = '#6B7280';
+    }
+
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Fade in
+    setTimeout(() => {
+        toast.style.opacity = '1';
+    }, 10);
+
+    if (autoHide) {
+        // Fade out and remove after 3 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    return toast;
+}
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all event listeners and load initial data
@@ -363,4 +418,164 @@ function scrollToBottom() {
         top: chatMessages.scrollHeight,
         behavior: 'smooth'
     });
+}
+
+// Load chat list
+async function loadChatList() {
+    try {
+        const response = await fetch('/api/chats');
+        const data = await response.json();
+        
+        const chatList = document.getElementById('chatList');
+        chatList.innerHTML = ''; // Clear existing chats
+        
+        if (data.chats && data.chats.length > 0) {
+            data.chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'chat-item';
+                chatItem.dataset.chatId = chat.id;
+                if (chat.id === currentChatId) {
+                    chatItem.classList.add('active');
+                }
+                
+                // Format the date
+                const date = new Date(chat.updated_at || chat.created_at);
+                const formattedDate = date.toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                
+                chatItem.innerHTML = `
+                    <div class="chat-item-content">
+                        <div class="chat-title">${chat.title || 'New Chat'}</div>
+                        <div class="chat-time">${formattedDate}</div>
+                    </div>
+                `;
+                
+                chatItem.addEventListener('click', () => loadChat(chat.id));
+                chatList.appendChild(chatItem);
+            });
+        } else {
+            chatList.innerHTML = '<div class="text-center p-4 text-gray-500">No chats yet</div>';
+        }
+    } catch (error) {
+        console.error('Error loading chat list:', error);
+        showToast('Failed to load chat list', 'error');
+    }
+}
+
+// Add delete all chats functionality
+async function handleDeleteAll() {
+    try {
+        // First, fetch the list of chats to ensure we have the latest data
+        const response = await fetch('/api/chats');
+        const data = await response.json();
+        
+        if (!data.chats || data.chats.length === 0) {
+            showToast('No chats to delete', 'info');
+            return;
+        }
+
+        // Create and show confirmation dialog
+        const dialog = document.createElement('div');
+        dialog.innerHTML = `
+            <div class="dialog-overlay"></div>
+            <div class="confirmation-dialog">
+                <div class="dialog-content">
+                    <p>Are you sure you want to delete all ${data.chats.length} chats? This action cannot be undone.</p>
+                </div>
+                <div class="dialog-buttons">
+                    <button class="dialog-button dialog-button-cancel">Cancel</button>
+                    <button class="dialog-button dialog-button-confirm">Delete All</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(dialog);
+
+        // Handle dialog actions
+        return new Promise((resolve) => {
+            const overlay = dialog.querySelector('.dialog-overlay');
+            const cancelBtn = dialog.querySelector('.dialog-button-cancel');
+            const confirmBtn = dialog.querySelector('.dialog-button-confirm');
+
+            const closeDialog = () => {
+                document.body.removeChild(dialog);
+                resolve(false);
+            };
+
+            overlay.addEventListener('click', closeDialog);
+            cancelBtn.addEventListener('click', closeDialog);
+
+            confirmBtn.addEventListener('click', async () => {
+                try {
+                    // Show loading state
+                    const loadingToast = showToast('Deleting all chats...', 'info', false);
+                    let deletedCount = 0;
+                    let errorCount = 0;
+
+                    // Delete chats one by one
+                    for (const chat of data.chats) {
+                        try {
+                            const response = await fetch(`/api/chats/${chat.id}`, {
+                                method: 'DELETE'
+                            });
+
+                            if (response.ok) {
+                                deletedCount++;
+                                // If this was the active chat, clear the messages
+                                if (currentChatId === chat.id) {
+                                    clearChat();
+                                    currentChatId = null;
+                                }
+                            } else {
+                                errorCount++;
+                                console.error(`Failed to delete chat ${chat.id}`);
+                            }
+                        } catch (error) {
+                            errorCount++;
+                            console.error(`Error deleting chat ${chat.id}:`, error);
+                        }
+                    }
+
+                    // Remove loading toast
+                    loadingToast.remove();
+
+                    // Show result message
+                    if (deletedCount > 0) {
+                        showToast(`Successfully deleted ${deletedCount} chat${deletedCount !== 1 ? 's' : ''}`, 'success');
+                    }
+                    if (errorCount > 0) {
+                        showToast(`Failed to delete ${errorCount} chat${errorCount !== 1 ? 's' : ''}`, 'error');
+                    }
+
+                    // Refresh chat list
+                    await loadChatList();
+                    
+                    document.body.removeChild(dialog);
+                    resolve(true);
+                } catch (error) {
+                    console.error('Error in delete all operation:', error);
+                    showToast('Failed to delete all chats', 'error');
+                    document.body.removeChild(dialog);
+                    resolve(false);
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Error fetching chats:', error);
+        showToast('Failed to fetch chats', 'error');
+    }
+}
+
+// Add event listener for delete all button
+document.getElementById('deleteAllChatsBtn').addEventListener('click', handleDeleteAll);
+
+// Helper function to clear the current chat
+function clearChat() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.innerHTML = '';
+    }
+    currentChatId = null;
 } 

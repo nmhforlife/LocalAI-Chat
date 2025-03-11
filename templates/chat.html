@@ -50,9 +50,14 @@
             <div class="sidebar-content">
                 <div class="sidebar-header">
                     <h2>Chat History</h2>
-                    <button id="newChatBtn" class="btn btn-primary">
-                        <i class="fas fa-plus mr-2"></i> New Chat
-                    </button>
+                    <div class="sidebar-actions">
+                        <button id="newChatBtn" class="btn btn-primary">
+                            <i class="fas fa-plus mr-2"></i> New Chat
+                        </button>
+                        <button id="deleteAllChatsBtn" class="btn btn-danger">
+                            <i class="fas fa-trash-alt mr-2"></i> Delete All
+                        </button>
+                    </div>
                 </div>
                 <div class="chat-list custom-scrollbar" id="chatList">
                     <!-- Chat list will be populated here -->
