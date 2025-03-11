@@ -4,7 +4,7 @@ A powerful, locally-run chatbot that combines Ollama's LLM capabilities with RAG
 
 ## Features
 
-- 🤖 Local LLM inference using Ollama
+- 🤖 Local LLM inference using Ollama (default: llama3.2:latest)
 - 📚 RAG (Retrieval Augmented Generation) for context-aware responses
 - 🚀 FastAPI backend with async support
 - ✨ Modern web interface with Tailwind CSS
@@ -13,13 +13,14 @@ A powerful, locally-run chatbot that combines Ollama's LLM capabilities with RAG
 - 🔍 High-quality embeddings using Sentence Transformers
 - 📝 Document management system
 - 🌓 Dark/Light theme support
+- ⚙️ Configurable settings for chat history, file handling, and UI preferences
 
 ## Prerequisites
 
 - Python 3.8+
 - Node.js and npm (for frontend dependencies)
 - [Ollama](https://ollama.ai/) installed and running locally
-- Ollama models pulled (e.g., `ollama pull mistral`)
+- Ollama model pulled (default: `ollama pull llama3.2:latest`)
 
 ## Quick Start
 
@@ -34,14 +35,22 @@ cd localchat
 2. Run the setup script:
 - On Unix/macOS:
   ```bash
-  ./setup.sh
+  ./setup.sh  # If no virtual environment is active
+  # or
+  source setup.sh  # If virtual environment is active
+  # or
+  . setup.sh  # Alternative way if virtual environment is active
   ```
 - On Windows:
   ```cmd
-  setup.bat
+  setup.bat  # If no virtual environment is active
+  # or
+  call setup.bat  # If virtual environment is active
   ```
 
-The setup script will:
+The setup scripts will:
+- Check for required dependencies (Python, Node.js, Ollama)
+- Verify Ollama installation and model availability
 - Create and activate a Python virtual environment
 - Install Python dependencies
 - Install Node.js dependencies
@@ -70,15 +79,20 @@ npm install
 HOST=localhost
 PORT=8000
 
-# Model Configuration
-MODEL_NAME=mistral
-EMBEDDING_MODEL=all-MiniLM-L6-v2
-
 # Database Configuration
 DB_PATH=chats.db
 
 # Storage Configuration
-CHROMA_PERSIST_DIRECTORY=chromadb
+DEFAULT_MODEL=llama3.2:latest
+API_ENDPOINT=http://localhost:11434
+EMBEDDING_MODEL=all-minilm
+CHROMA_PERSIST_DIRECTORY=./data/chroma
+MESSAGE_HISTORY_LIMIT=50
+MAX_FILE_SIZE=10
+ALLOWED_FILE_TYPES=txt,md,pdf
+AUTO_SCROLL=True
+THEME_MODE=light
+FONT_SIZE=medium
 ```
 
 ## Usage
@@ -181,19 +195,31 @@ To clean up instance-specific files before sharing or deploying:
 
 - On Unix/macOS:
   ```bash
-  ./cleanup.sh
+  ./cleanup.sh  # If no virtual environment is active
+  # or
+  source cleanup.sh  # If virtual environment is active
+  # or
+  . cleanup.sh  # Alternative way if virtual environment is active
   ```
 - On Windows:
   ```cmd
-  cleanup.bat
+  cleanup.bat  # If no virtual environment is active
+  # or
+  call cleanup.bat  # If virtual environment is active
   ```
 
-This will remove:
-- Virtual environment
-- Node modules
-- Cache files
-- Instance-specific data
-- Log files
+The cleanup scripts will automatically detect if you're in a virtual environment:
+- If a virtual environment is active, they will prompt you to use `source`/`.` (Unix/macOS) or `call` (Windows) to ensure proper deactivation
+- If no virtual environment is active, they will proceed with cleanup normally
+
+This will:
+- Deactivate any active virtual environment (when using `source`/`call`)
+- Remove virtual environment directory
+- Remove Node modules
+- Remove cache files
+- Remove instance-specific data
+- Remove log files
+- Preserve project structure and source code
 
 ## Troubleshooting
 

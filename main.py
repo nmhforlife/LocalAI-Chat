@@ -97,15 +97,13 @@ async def api_info():
 async def health_check():
     """Health check endpoint."""
     try:
-        # Check if Ollama is accessible
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{ollama_service.base_url}/api/version")
-            response.raise_for_status()
+        # Check if Ollama service is available
+        ollama_service = OllamaService(settings.model_name)
+        await ollama_service.check_health()
         
         return {
             "status": "healthy",
-            "ollama": "connected",
-            "rag_service": "initialized"
+            "timestamp": datetime.now().isoformat()
         }
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
@@ -113,6 +111,92 @@ async def health_check():
             status_code=503,
             detail=f"Service unhealthy: {str(e)}"
         )
+
+@app.get("/system/status")
+async def system_status():
+    """System status endpoint for Zendesk app integration."""
+    try:
+        # Get available models
+        ollama_service = OllamaService()  # Initialize without parameters
+        
+        try:
+            models = await ollama_service.list_models()
+        except Exception as e:
+            logger.error(f"Error listing models: {str(e)}")
+            models = []
+        
+        # Get document and chat counts
+        rag_service = RAGService()
+        try:
+            document_count = len(rag_service.list_documents())
+        except Exception as e:
+            logger.error(f"Error listing documents: {str(e)}")
+            document_count = 0
+        
+        # Get chat count
+        chat_service = ChatService()
+        try:
+            chats = chat_service.list_chats()
+            chat_count = len(chats) if chats else 0
+        except Exception as e:
+            logger.error(f"Error listing chats: {str(e)}")
+            chat_count = 0
+        
+        # Check Ollama status
+        ollama_status = "running"
+        try:
+            await ollama_service.verify_connection()
+        except Exception as e:
+            logger.error(f"Ollama connection check failed: {str(e)}")
+            ollama_status = "error"
+        
+        # Get model names from the response
+        model_names = []
+        
+        # Handle different response formats
+        if isinstance(models, dict):
+            if 'models' in models and isinstance(models['models'], list):
+                # Format: {"models": [{"name": "model1"}, {"name": "model2"}]}
+                model_names = [model.get('name') for model in models['models'] if isinstance(model, dict) and model.get('name')]
+            elif 'models' in models and isinstance(models['models'], str):
+                # Format: {"models": "model1,model2"}
+                model_names = [m.strip() for m in models['models'].split(',')]
+        elif isinstance(models, list):
+            # Format: [{"name": "model1"}, {"name": "model2"}]
+            if all(isinstance(m, dict) for m in models):
+                model_names = [m.get('name') for m in models if m.get('name')]
+            else:
+                # Format: ["model1", "model2"]
+                model_names = [str(m) for m in models if m]
+        elif isinstance(models, str):
+            # Format: "model1,model2"
+            model_names = [m.strip() for m in models.split(',')]
+            
+        # Ensure we have at least the default model
+        if not model_names:
+            model_names = [ollama_service.default_model]
+            
+        return {
+            "status": "ok",
+            "ollama_status": ollama_status,
+            "models_available": model_names,
+            "current_model": ollama_service.default_model,
+            "document_count": document_count,
+            "chat_count": chat_count
+        }
+    except Exception as e:
+        logger.error(f"System status check failed: {str(e)}")
+        # Get default model from settings as fallback
+        default_model = settings.default_model if hasattr(settings, 'default_model') else "llama3.2:latest"
+        return {
+            "status": "error",
+            "ollama_status": "error",
+            "models_available": [default_model],
+            "current_model": default_model,
+            "document_count": 0,
+            "chat_count": 0,
+            "error": str(e)
+        }
 
 @app.get("/api/models")
 async def list_models():
@@ -646,6 +730,66 @@ async def get_default_model():
     except Exception as e:
         logger.error(f"Error getting default model: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/chat")
+async def chat_direct(request: ChatRequest):
+    """Direct chat endpoint for Zendesk app integration."""
+    # Redirect to the API chat endpoint
+    return await chat(request)
+
+@app.get("/chat/history")
+async def chat_history(chat_id: Optional[str] = None):
+    """Chat history endpoint for Zendesk app integration."""
+    try:
+        chat_service = ChatService()
+        
+        if chat_id:
+            # Get messages for a specific chat
+            chat = chat_service.load_chat(chat_id)
+            if not chat or not chat.messages:
+                return {"messages": []}
+            
+            # Format messages for the response
+            formatted_messages = []
+            for i, msg in enumerate(chat.messages):
+                formatted_messages.append({
+                    "id": getattr(msg, 'id', f"{chat_id}_{i}"),  # Generate an ID if not present
+                    "chat_id": chat_id,
+                    "role": msg.role,
+                    "content": msg.content,
+                    "created_at": msg.timestamp.isoformat() if hasattr(msg, 'timestamp') and msg.timestamp else datetime.now().isoformat(),
+                    "metadata": getattr(msg, 'metadata', None)
+                })
+            
+            return {"messages": formatted_messages}
+        else:
+            # Get all chats and their messages
+            chats = chat_service.list_chats()
+            all_messages = []
+            
+            for chat in chats:
+                if not chat.messages:
+                    continue
+                    
+                for i, msg in enumerate(chat.messages):
+                    all_messages.append({
+                        "id": getattr(msg, 'id', f"{chat.id}_{i}"),  # Generate an ID if not present
+                        "chat_id": chat.id,
+                        "role": msg.role,
+                        "content": msg.content,
+                        "created_at": msg.timestamp.isoformat() if hasattr(msg, 'timestamp') and msg.timestamp else datetime.now().isoformat(),
+                        "metadata": getattr(msg, 'metadata', None)
+                    })
+            
+            return {"messages": all_messages}
+    except Exception as e:
+        logger.error(f"Error getting chat history: {str(e)}")
+        return {"messages": [], "error": str(e)}
+
+@app.delete("/chat/{chat_id}")
+async def delete_chat_direct(chat_id: str):
+    """Delete chat endpoint for Zendesk app integration."""
+    return await delete_chat(chat_id)
 
 if __name__ == "__main__":
     import uvicorn
