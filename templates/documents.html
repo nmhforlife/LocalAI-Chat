@@ -87,16 +87,18 @@
                     <h3 class="mb-2">Upload Documents</h3>
                     <p class="mb-4" style="color: var(--text-secondary);">Drag and drop files here or click to browse</p>
                     <input type="file" id="fileInput" multiple class="hidden">
-                    <label for="fileInput" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                        <i class="fas fa-folder-open"></i>
-                        Choose Files
-                    </label>
+                    <div class="d-flex justify-content-center gap-3">
+                        <label for="fileInput" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                            <i class="fas fa-folder-open"></i>
+                            Choose Files
+                        </label>
+                        <button id="uploadButton" disabled class="btn btn-primary d-inline-flex align-items-center gap-2">
+                            <i class="fas fa-upload"></i>
+                            Upload Files
+                        </button>
+                    </div>
                 </div>
                 <div id="selectedFiles" class="w-100" style="max-width: 500px;"></div>
-                <button id="uploadButton" disabled class="btn btn-primary w-100" style="max-width: 500px;">
-                    <i class="fas fa-upload mr-2"></i>
-                    Upload Files
-                </button>
             </div>
         </div>
 
@@ -108,7 +110,13 @@
             <div class="p-4 border-b" style="border-color: var(--border-color);">
                 <div class="d-flex justify-content-between align-items-center">
                     <h2>Your Documents</h2>
-                    <div id="documentCount" style="color: var(--text-secondary); font-size: var(--font-size-sm);">0 documents</div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div id="documentCount" style="color: var(--text-secondary); font-size: var(--font-size-sm);">0 documents</div>
+                        <button id="deleteAllDocs" class="btn btn-sm btn-outline" style="color: var(--color-error);">
+                            <i class="fas fa-trash mr-1"></i>
+                            Delete All
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -170,6 +178,7 @@
                     docDiv.className = 'p-4 border-b';
                     docDiv.style.borderColor = 'var(--border-color)';
                     docDiv.style.transition = 'background-color var(--transition-fast) ease';
+                    docDiv.dataset.docId = doc.id;
                     
                     // Truncate content for preview
                     const truncatedContent = doc.content.length > 500 
@@ -188,27 +197,30 @@
                     
                     const safeContent = escapeHtml(truncatedContent);
                     
-                    docDiv.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-start gap-4">
-                            <div style="flex: 1; max-width: calc(100% - 50px);">
-                                <div class="d-flex align-items-center gap-3 mb-2">
-                                    <i class="fas fa-file-alt" style="color: var(--text-tertiary);"></i>
-                                    <span style="font-weight: 500; color: var(--text-primary);">${escapeHtml(doc.metadata.filename || 'Untitled')}</span>
-                                    <span class="p-1 rounded-full" style="font-size: var(--font-size-xs); background-color: var(--surface-color-hover); color: var(--text-secondary);">${escapeHtml(doc.metadata.content_type || 'text')}</span>
-                                </div>
-                                <button class="btn btn-sm btn-outline" onclick="toggleContent(this)" style="color: var(--text-secondary);">
-                                    <i class="fas fa-chevron-down mr-1"></i>
-                                    Show Content
-                                </button>
-                                <div class="document-preview hidden mt-2">${safeContent}</div>
+                    // Create the inner content div
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'd-flex justify-content-between align-items-start gap-4';
+                    contentDiv.innerHTML = `
+                        <div style="flex: 1; max-width: calc(100% - 50px);">
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <i class="fas fa-file-alt" style="color: var(--text-tertiary);"></i>
+                                <span style="font-weight: 500; color: var(--text-primary);">${escapeHtml(doc.metadata.filename || 'Untitled')}</span>
+                                <span class="p-1 rounded-full" style="font-size: var(--font-size-xs); background-color: var(--surface-color-hover); color: var(--text-secondary);">${escapeHtml(doc.metadata.content_type || 'text')}</span>
                             </div>
-                            <div>
-                                <button class="btn btn-sm btn-outline" onclick="deleteDocument('${doc.id}')" style="color: var(--color-error);">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                            <button class="btn btn-sm btn-outline" onclick="toggleContent(this)" style="color: var(--text-secondary);">
+                                <i class="fas fa-chevron-down mr-1"></i>
+                                Show Content
+                            </button>
+                            <div class="document-preview hidden mt-2">${safeContent}</div>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline" onclick="deleteDocument('${doc.id}')" style="color: var(--color-error);">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
                     `;
+                    
+                    docDiv.appendChild(contentDiv);
                     
                     docDiv.addEventListener('mouseover', function() {
                         this.style.backgroundColor = 'var(--surface-color-hover)';
@@ -285,6 +297,159 @@
                 error.style.display = 'block';
             }
         });
+
+        // Add click handler for delete all button
+        document.getElementById('deleteAllDocs').addEventListener('click', () => {
+            // Create and show confirmation dialog
+            const overlay = document.createElement('div');
+            overlay.className = 'dialog-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            `;
+            
+            const dialog = document.createElement('div');
+            dialog.className = 'confirmation-dialog';
+            dialog.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--surface-color);
+                padding: var(--spacing-md);
+                border-radius: var(--radius-md);
+                box-shadow: var(--shadow-md);
+                z-index: 1000;
+                max-width: 300px;
+                width: 90%;
+                border: 1px solid var(--border-color);
+            `;
+            
+            dialog.innerHTML = `
+                <div style="margin-bottom: 1rem; text-align: center;">
+                    <p style="margin-bottom: 0.5rem; color: var(--text-primary);">Delete All Documents?</p>
+                    <p style="font-size: 0.9em; color: var(--text-secondary);">This action cannot be undone. All documents will be permanently deleted.</p>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 0.5rem;">
+                    <button class="btn btn-sm btn-outline dialog-button-cancel">Cancel</button>
+                    <button class="btn btn-sm dialog-button-confirm" style="background-color: var(--color-error); color: white;">Delete All</button>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(dialog);
+            
+            // Handle dialog buttons
+            const handleDeleteAll = async () => {
+                // Get all document IDs
+                const documents = Array.from(document.querySelectorAll('div[data-doc-id]')).map(item => item.dataset.docId).filter(Boolean);
+                
+                if (documents.length === 0) {
+                    overlay.remove();
+                    dialog.remove();
+                    return;
+                }
+                
+                // Remove dialog before starting deletion
+                overlay.remove();
+                dialog.remove();
+                
+                console.log(`Found ${documents.length} documents to delete:`, documents);
+                
+                // Show loading state
+                documentList.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner d-inline-block"></div> Deleting all documents...</div>';
+                
+                let failedCount = 0;
+                
+                // Delete documents one by one since bulk delete is not supported
+                for (const docId of documents) {
+                    try {
+                        const response = await fetch(`/api/documents/${docId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (!response.ok) {
+                            failedCount++;
+                            console.error(`Failed to delete document ${docId}`);
+                        }
+                    } catch (e) {
+                        failedCount++;
+                        console.error(`Error deleting document ${docId}:`, e);
+                    }
+                }
+                
+                // Refresh the documents list
+                await loadDocuments();
+                
+                // Show appropriate message based on results
+                const successDiv = document.createElement('div');
+                successDiv.className = 'alert alert-success';
+                successDiv.style.cssText = `
+                    position: fixed;
+                    top: 1rem;
+                    right: 1rem;
+                    padding: 1rem;
+                    background-color: ${failedCount > 0 ? '#fff3cd' : '#d4edda'};
+                    color: ${failedCount > 0 ? '#856404' : '#155724'};
+                    border-radius: var(--radius-sm);
+                    z-index: 1000;
+                    animation: fadeIn 0.3s ease;
+                `;
+                
+                if (failedCount === 0) {
+                    successDiv.textContent = 'All documents deleted successfully';
+                } else if (failedCount === documents.length) {
+                    successDiv.textContent = 'Failed to delete documents';
+                } else {
+                    successDiv.textContent = `Deleted ${documents.length - failedCount} out of ${documents.length} documents`;
+                }
+                
+                document.body.appendChild(successDiv);
+                setTimeout(() => successDiv.remove(), 3000);
+            };
+            
+            const handleCancel = () => {
+                overlay.remove();
+                dialog.remove();
+            };
+            
+            // Add click handlers to dialog buttons
+            dialog.querySelector('.dialog-button-confirm').addEventListener('click', handleDeleteAll);
+            dialog.querySelector('.dialog-button-cancel').addEventListener('click', handleCancel);
+            
+            // Close dialog when clicking overlay
+            overlay.addEventListener('click', handleCancel);
+        });
+
+        // Add loading spinner styles if not already present
+        if (!document.querySelector('#spinnerStyles')) {
+            const style = document.createElement('style');
+            style.id = 'spinnerStyles';
+            style.textContent = `
+                .loading-spinner {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid #f3f3f3;
+                    border-top: 2px solid var(--text-primary);
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         // Initial load
         loadDocuments();
