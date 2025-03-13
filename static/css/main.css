@@ -1514,15 +1514,15 @@ code {
 
 :root {
   /* Color System */
-  --color-primary: #6366f1;         /* Indigo 500 */
-  --color-primary-light: #818cf8;   /* Indigo 400 */
-  --color-primary-dark: #4f46e5;    /* Indigo 600 */
+  --color-primary: #6366f1;         /* Indigo 500 - Main brand color */
+  --color-primary-light: #818cf8;   /* Indigo 400 - Hover states */
+  --color-primary-dark: #4f46e5;    /* Indigo 600 - Active states */
   
-  --color-secondary: #10b981;       /* Emerald 500 */
+  --color-secondary: #10b981;       /* Emerald 500 - Success states */
   --color-secondary-light: #34d399; /* Emerald 400 */
   --color-secondary-dark: #059669;  /* Emerald 600 */
   
-  --color-accent: #f59e0b;          /* Amber 500 */
+  --color-accent: #f59e0b;          /* Amber 500 - Highlights */
   
   --color-success: #10b981;         /* Emerald 500 */
   --color-warning: #f59e0b;         /* Amber 500 */

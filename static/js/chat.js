@@ -60,12 +60,33 @@ function showToast(message, type = 'info', autoHide = true) {
     return toast;
 }
 
+// Add adjustContainerHeights function at the top level
+function adjustContainerHeights() {
+    const chatMessages = document.getElementById('chatMessages');
+    const inputContainer = document.getElementById('inputContainer');
+    const chatContainer = document.getElementById('chatContainer');
+    
+    if (chatMessages && inputContainer && chatContainer) {
+        // Get the height of the input container
+        const inputHeight = inputContainer.offsetHeight;
+        
+        // Calculate the available height for messages
+        const containerHeight = chatContainer.offsetHeight;
+        const headerHeight = document.querySelector('.chat-header')?.offsetHeight || 0;
+        const messagesHeight = containerHeight - headerHeight - inputHeight;
+        
+        // Set the height of the messages container
+        chatMessages.style.height = `${messagesHeight}px`;
+    }
+}
+
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all event listeners and load initial data
     initializeChat();
     initializeSidebar(); // Initialize sidebar state
     initializeScrollButtons(); // Initialize scroll navigation
+    initializeTextArea();
     
     // Ensure proper sizing of containers
     adjustContainerHeights();
@@ -75,9 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Listen for window resize events
     window.addEventListener('resize', adjustContainerHeights);
-    
-    // Ensure the sidebar toggle button has the correct icon
-    updateSidebarToggleIcon();
 });
 
 // Initialize scroll navigation buttons
@@ -148,7 +166,7 @@ function initializeScrollButtons() {
 
 // Update sidebar toggle icon based on sidebar state
 function updateSidebarToggleIcon() {
-    const sidebar = document.getElementById('chatSidebar');
+    const sidebar = document.querySelector('.chat-sidebar');
     const toggleBtn = document.getElementById('sidebarToggle');
     
     if (!sidebar || !toggleBtn) return;
@@ -157,8 +175,7 @@ function updateSidebarToggleIcon() {
     const icon = toggleBtn.querySelector('i');
     
     if (icon) {
-        icon.className = ''; // Clear all classes
-        icon.classList.add('fas', isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left');
+        icon.className = isCollapsed ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
     }
 }
 
@@ -171,13 +188,10 @@ async function sendMessage() {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     
-    // Create user message with proper styling
-    messageDiv.className = 'message user-message mb-4 max-w-[80%] p-3 bg-primary text-gray-900 rounded-lg';
-    
+    messageDiv.className = 'message message--user';
     messageDiv.innerHTML = marked.parse(message);
     chatMessages.appendChild(messageDiv);
     
-    // Add message to history
     messageHistory.push({
         role: 'user',
         content: message,
@@ -288,7 +302,7 @@ async function sendMessage() {
         console.error('Error in sendMessage:', error);
         loading.classList.add('hidden');
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'message error-message mb-4 p-3 bg-red-100 text-red-800 rounded-lg';
+        errorDiv.className = 'message message--error';
         errorDiv.textContent = `Error: ${error.message}`;
         chatMessages.appendChild(errorDiv);
     }
@@ -297,17 +311,15 @@ async function sendMessage() {
 // Update streaming message
 function updateStreamingMessage(message) {
     const chatMessages = document.getElementById('chatMessages');
-    const lastMessage = chatMessages.querySelector('.assistant-message:last-child');
+    const lastMessage = chatMessages.querySelector('.message--assistant:last-child');
     
     if (lastMessage) {
         lastMessage.innerHTML = marked.parse(message);
-        // Add copy buttons to any new code blocks
         addCopyButtonsToCodeBlocks(lastMessage);
     } else {
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'message assistant-message mb-4 max-w-[80%] p-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg';
+        messageDiv.className = 'message message--assistant';
         messageDiv.innerHTML = marked.parse(message);
-        // Add copy buttons to any new code blocks
         addCopyButtonsToCodeBlocks(messageDiv);
         chatMessages.appendChild(messageDiv);
     }
@@ -381,11 +393,11 @@ async function loadChat(chatId) {
         messageHistory.forEach(msg => {
             const messageDiv = document.createElement('div');
             if (msg.role === 'user') {
-                messageDiv.className = 'message user-message mb-4 max-w-[80%] p-3 bg-primary text-gray-900 rounded-lg';
+                messageDiv.className = 'message message--user';
             } else if (msg.role === 'assistant') {
-                messageDiv.className = 'message assistant-message mb-4 max-w-[80%] p-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg';
+                messageDiv.className = 'message message--assistant';
             } else {
-                messageDiv.className = `message ${msg.role}-message mb-4 max-w-[80%] p-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg`;
+                messageDiv.className = `message message--${msg.role}`;
             }
             const formattedContent = marked.parse(msg.content);
             messageDiv.innerHTML = formattedContent;
@@ -427,7 +439,7 @@ async function loadChatList() {
         const data = await response.json();
         
         const chatList = document.getElementById('chatList');
-        chatList.innerHTML = ''; // Clear existing chats
+        chatList.innerHTML = '';
         
         if (data.chats && data.chats.length > 0) {
             data.chats.forEach(chat => {
@@ -435,10 +447,9 @@ async function loadChatList() {
                 chatItem.className = 'chat-item';
                 chatItem.dataset.chatId = chat.id;
                 if (chat.id === currentChatId) {
-                    chatItem.classList.add('active');
+                    chatItem.classList.add('chat-item--active');
                 }
                 
-                // Format the date
                 const date = new Date(chat.updated_at || chat.created_at);
                 const formattedDate = date.toLocaleDateString(undefined, {
                     month: 'short',
@@ -447,9 +458,9 @@ async function loadChatList() {
                 });
                 
                 chatItem.innerHTML = `
-                    <div class="chat-item-content">
-                        <div class="chat-title">${chat.title || 'New Chat'}</div>
-                        <div class="chat-time">${formattedDate}</div>
+                    <div class="chat-item__content">
+                        <div class="chat-item__title">${chat.title || 'New Chat'}</div>
+                        <div class="chat-item__time">${formattedDate}</div>
                     </div>
                 `;
                 
@@ -578,4 +589,141 @@ function clearChat() {
         chatMessages.innerHTML = '';
     }
     currentChatId = null;
+}
+
+// Add at the beginning of the file, after variable declarations
+function initializeSidebar() {
+    const appContainer = document.querySelector('.app');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    // Initialize sidebar state from localStorage
+    if (sidebarCollapsed) {
+        appContainer.classList.add('app--sidebar-collapsed');
+    }
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Toggle sidebar collapsed state
+            appContainer.classList.toggle('app--sidebar-collapsed');
+            
+            // Update localStorage
+            sidebarCollapsed = appContainer.classList.contains('app--sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+            
+            // Adjust container heights after animation
+            setTimeout(adjustContainerHeights, 300);
+        });
+    }
+}
+
+// Update initializeTextArea function with better event handling
+function initializeTextArea() {
+    const userInput = document.getElementById('userInput');
+    const resizeHandle = document.getElementById('resizeHandle');
+    let startY, startHeight;
+    let isDragging = false;
+
+    function updateTextAreaHeight(height) {
+        height = Math.max(60, Math.min(300, height));
+        userInput.style.height = `${height}px`;
+        userInput.parentElement.style.height = `${height}px`;
+        adjustContainerHeights();
+    }
+
+    function getEventY(e) {
+        if (e.type.startsWith('touch')) {
+            return e.touches?.[0]?.clientY ?? e.changedTouches?.[0]?.clientY ?? e.clientY;
+        }
+        return e.clientY;
+    }
+
+    function initDrag(e) {
+        isDragging = true;
+        startY = getEventY(e);
+        startHeight = userInput.offsetHeight;
+        
+        // Disable transitions
+        userInput.style.transition = 'none';
+        userInput.parentElement.style.transition = 'none';
+        
+        // Prevent text selection
+        document.body.style.userSelect = 'none';
+        document.body.style.pointerEvents = 'none';
+        
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function handleDrag(e) {
+        if (!isDragging) return;
+        
+        const currentY = getEventY(e);
+        if (typeof currentY !== 'number') return;
+        
+        const delta = startY - currentY;
+        const newHeight = startHeight + delta;
+        
+        requestAnimationFrame(() => {
+            updateTextAreaHeight(newHeight);
+        });
+        
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function stopDrag() {
+        if (!isDragging) return;
+        
+        isDragging = false;
+        
+        // Re-enable transitions
+        userInput.style.transition = '';
+        userInput.parentElement.style.transition = '';
+        
+        // Re-enable text selection
+        document.body.style.userSelect = '';
+        document.body.style.pointerEvents = '';
+        
+        // Ensure final height is within bounds
+        const finalHeight = userInput.offsetHeight;
+        updateTextAreaHeight(finalHeight);
+    }
+
+    // Mouse events
+    resizeHandle.addEventListener('mousedown', initDrag);
+    document.addEventListener('mousemove', handleDrag);
+    document.addEventListener('mouseup', stopDrag);
+
+    // Touch events
+    resizeHandle.addEventListener('touchstart', initDrag, { passive: false });
+    document.addEventListener('touchmove', handleDrag, { passive: false });
+    document.addEventListener('touchend', stopDrag);
+    document.addEventListener('touchcancel', stopDrag);
+
+    // Auto-resize on input
+    userInput.addEventListener('input', function() {
+        if (!isDragging) {
+            this.style.height = '60px';
+            const newHeight = Math.min(this.scrollHeight, 300);
+            updateTextAreaHeight(newHeight);
+        }
+    });
+
+    // Set initial height
+    updateTextAreaHeight(60);
+
+    // Return cleanup function
+    return () => {
+        resizeHandle.removeEventListener('mousedown', initDrag);
+        document.removeEventListener('mousemove', handleDrag);
+        document.removeEventListener('mouseup', stopDrag);
+        resizeHandle.removeEventListener('touchstart', initDrag);
+        document.removeEventListener('touchmove', handleDrag);
+        document.removeEventListener('touchend', stopDrag);
+        document.removeEventListener('touchcancel', stopDrag);
+    };
 } 

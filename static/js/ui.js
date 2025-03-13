@@ -2,20 +2,11 @@
 
 // Initialize chat UI
 function initializeChat() {
-    // Initialize sidebar toggle
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', toggleSidebar);
-    }
-
-    // Initialize resizable input
-    initResizable();
-
     // Load initial data
     loadModels();
     loadChats();
 
-    // Initialize other event listeners
+    // Initialize event listeners
     const sendButton = document.getElementById('sendButton');
     const userInput = document.getElementById('userInput');
     const newChatBtn = document.getElementById('newChatBtn');
@@ -44,146 +35,6 @@ function initializeChat() {
             currentModel = this.value;
             localStorage.setItem('selectedModel', currentModel);
         });
-    }
-}
-
-// Toggle sidebar visibility
-function toggleSidebar() {
-    console.log("Toggle sidebar called");
-    const sidebar = document.getElementById('chatSidebar');
-    const container = document.getElementById('chatContainer');
-    const toggleBtn = document.getElementById('sidebarToggle');
-    
-    if (!sidebar || !container) {
-        console.error("Sidebar or container not found");
-        return;
-    }
-    
-    console.log("Before toggle:", sidebar.classList.contains('collapsed'));
-    sidebar.classList.toggle('collapsed');
-    console.log("After toggle:", sidebar.classList.contains('collapsed'));
-    
-    // Update container margin based on sidebar state
-    if (sidebar.classList.contains('collapsed')) {
-        console.log("Sidebar is now collapsed");
-        container.style.marginLeft = '0';
-        localStorage.setItem('sidebarCollapsed', 'true');
-        if (toggleBtn) {
-            toggleBtn.setAttribute('title', 'Expand sidebar');
-        }
-    } else {
-        console.log("Sidebar is now expanded");
-        container.style.marginLeft = '300px';
-        localStorage.setItem('sidebarCollapsed', 'false');
-        if (toggleBtn) {
-            toggleBtn.setAttribute('title', 'Collapse sidebar');
-        }
-    }
-    
-    // Update the sidebar toggle icon
-    if (typeof updateSidebarToggleIcon === 'function') {
-        updateSidebarToggleIcon();
-    } else {
-        // Fallback if the function is not available
-        const icon = toggleBtn?.querySelector('i');
-        if (icon) {
-            icon.className = ''; // Clear all classes
-            icon.classList.add('fas', sidebar.classList.contains('collapsed') ? 'fa-chevron-right' : 'fa-chevron-left');
-        }
-    }
-    
-    // Force a reflow to ensure transitions work properly
-    window.getComputedStyle(sidebar).transform;
-    
-    // Adjust container heights after sidebar toggle
-    adjustContainerHeights();
-}
-
-// Initialize sidebar state from localStorage
-function initializeSidebar() {
-    console.log("Initializing sidebar");
-    const sidebar = document.getElementById('chatSidebar');
-    const container = document.getElementById('chatContainer');
-    const toggleBtn = document.getElementById('sidebarToggle');
-    
-    if (!sidebar || !container) {
-        console.error("Sidebar or container not found during initialization");
-        return;
-    }
-    
-    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    console.log("Sidebar collapsed state from localStorage:", isCollapsed);
-    
-    if (isCollapsed) {
-        console.log("Setting sidebar to collapsed");
-        sidebar.classList.add('collapsed');
-        container.style.marginLeft = '0';
-        if (toggleBtn) {
-            toggleBtn.setAttribute('title', 'Expand sidebar');
-        }
-    } else {
-        console.log("Setting sidebar to expanded");
-        sidebar.classList.remove('collapsed');
-        container.style.marginLeft = '300px';
-        if (toggleBtn) {
-            toggleBtn.setAttribute('title', 'Collapse sidebar');
-        }
-    }
-    
-    // Update the sidebar toggle icon
-    if (typeof updateSidebarToggleIcon === 'function') {
-        updateSidebarToggleIcon();
-    } else {
-        // Fallback if the function is not available
-        const icon = toggleBtn?.querySelector('i');
-        if (icon) {
-            icon.className = ''; // Clear all classes
-            icon.classList.add('fas', isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left');
-        }
-    }
-    
-    // Adjust container heights after setting initial sidebar state
-    adjustContainerHeights();
-}
-
-// Initialize resizable input area
-function initResizable() {
-    const resizeHandle = document.getElementById('resizeHandle');
-    const inputContainer = document.getElementById('inputContainer');
-    const chatMessages = document.getElementById('chatMessages');
-    
-    if (!resizeHandle || !inputContainer || !chatMessages) return;
-    
-    let startY, startHeight;
-    
-    resizeHandle.addEventListener('mousedown', startResize);
-    
-    function startResize(e) {
-        startY = e.clientY;
-        startHeight = parseInt(window.getComputedStyle(inputContainer).height, 10);
-        
-        document.addEventListener('mousemove', resize);
-        document.addEventListener('mouseup', stopResize);
-        
-        // Prevent text selection during resize
-        e.preventDefault();
-    }
-    
-    function resize(e) {
-        const newHeight = startHeight - (e.clientY - startY);
-        
-        // Set min and max height constraints
-        if (newHeight > 60 && newHeight < 300) {
-            inputContainer.style.height = `${newHeight}px`;
-            
-            // Adjust chat messages container to fill remaining space
-            adjustContainerHeights();
-        }
-    }
-    
-    function stopResize() {
-        document.removeEventListener('mousemove', resize);
-        document.removeEventListener('mouseup', stopResize);
     }
 }
 
@@ -385,28 +236,5 @@ async function loadModels() {
             modelSelect.innerHTML = '<option value="default">Default Model</option>';
             currentModel = 'default';
         }
-    }
-}
-
-// Adjust container heights to ensure proper layout
-function adjustContainerHeights() {
-    const chatMessages = document.getElementById('chatMessages');
-    const inputContainer = document.getElementById('inputContainer');
-    const chatContainer = document.getElementById('chatContainer');
-    
-    if (chatMessages && inputContainer && chatContainer) {
-        // Get the height of the input container
-        const inputHeight = inputContainer.offsetHeight;
-        
-        // Calculate the available height for messages
-        const containerHeight = chatContainer.offsetHeight;
-        const headerHeight = document.querySelector('.chat-header')?.offsetHeight || 0;
-        const messagesHeight = containerHeight - headerHeight - inputHeight;
-        
-        // Set the height of the messages container
-        chatMessages.style.height = `${messagesHeight}px`;
-        
-        // Scroll to bottom of messages
-        chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 } 

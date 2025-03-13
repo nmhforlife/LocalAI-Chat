@@ -1,22 +1,44 @@
 :root {
-    --yellow-40: #C7F860; /* Buttons, interactive color */
-    --yellow-80: #547A04; /* slightly darker yellow */
-    --carbon-20: #F2F2F2; /* Light background */
-    --carbon-70: #666666; /* Medium background */
-    --carbon-90: #333333; /* Dark background */
-    --black-100: #000000; /* Background, text color */
-    --white: #FFFFFF;
-  }
+    /* Using the same color system as main.css */
+    --color-primary: #6366f1;         /* Indigo 500 - Main brand color */
+    --color-primary-light: #818cf8;   /* Indigo 400 - Hover states */
+    --color-primary-dark: #4f46e5;    /* Indigo 600 - Active states */
+    
+    --color-secondary: #10b981;       /* Emerald 500 - Success states */
+    --color-secondary-light: #34d399; /* Emerald 400 */
+    --color-secondary-dark: #059669;  /* Emerald 600 */
+    
+    --color-accent: #f59e0b;          /* Amber 500 - Highlights */
+    
+    --color-success: #10b981;         /* Emerald 500 */
+    --color-warning: #f59e0b;         /* Amber 500 */
+    --color-error: #ef4444;           /* Red 500 */
+    --color-info: #3b82f6;            /* Blue 500 */
+    
+    /* Neutral Colors */
+    --color-white: #ffffff;
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+    --color-black: #000000;
+}
 
 /* Dark mode variables */
 body.dark-mode {
-    --bg-primary: #1a1a1a;
-    --bg-secondary: #2d2d2d;
-    --text-primary: #ffffff;
-    --text-secondary: #b3b3b3;
-    --border-color: #404040;
-    --accent-color: #4dabf7;
-    --accent-hover: #339af0;
+    --bg-primary: var(--color-gray-900);
+    --bg-secondary: var(--color-gray-800);
+    --text-primary: var(--color-white);
+    --text-secondary: var(--color-gray-300);
+    --border-color: var(--color-gray-700);
+    --accent-color: var(--color-primary);
+    --accent-hover: var(--color-primary-dark);
     --shadow-color: rgba(0, 0, 0, 0.3);
 }
 

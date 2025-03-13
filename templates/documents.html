@@ -17,11 +17,11 @@
             background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 3px;
+            background: var(--text-tertiary);
+            border-radius: var(--border-radius);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #374151;
+            background: var(--text-secondary);
         }
 
         .document-preview {
@@ -42,25 +42,216 @@
         body {
             overflow: hidden;
         }
+
+        /* Modern button styles */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            transition: all var(--transition-fast) ease;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background-color: currentColor;
+            border-radius: inherit;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            transition: transform var(--transition-fast) ease, opacity var(--transition-fast) ease;
+        }
+
+        .btn:hover::after {
+            transform: translate(-50%, -50%) scale(1.5);
+            opacity: 0.1;
+        }
+
+        .btn:active::after {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 0.2;
+        }
+
+        /* Modern card styles */
+        .document-item {
+            transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+        }
+
+        .document-item:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Smooth animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn var(--transition-normal) ease forwards;
+        }
+
+        /* Modern upload area */
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--border-radius-lg);
+            transition: all var(--transition-fast) ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--color-primary);
+            background-color: var(--surface-color-hover);
+        }
+
+        /* Loading spinner enhancement */
+        .loading-spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--surface-color);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Dialog styles */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirmation-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
+            z-index: 1001;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .dialog-content {
+            margin-bottom: 24px;
+        }
+
+        .dialog-content p:first-child {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .dialog-content p:last-child {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .dialog-button {
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast) ease;
+        }
+
+        .dialog-button-cancel {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .dialog-button-cancel:hover {
+            background-color: var(--surface-color-hover);
+        }
+
+        .dialog-button-confirm {
+            background-color: var(--color-error);
+            border: 1px solid var(--color-error);
+            color: white;
+        }
+
+        .dialog-button-confirm:hover {
+            background-color: var(--color-error-hover, #dc2626);
+        }
+
+        /* Toast styles */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="h-full overflow-hidden">
-    <!-- Main navigation -->
-    <nav class="position-fixed top-0 z-50 w-100 shadow-md" style="background-color: var(--background-color); border-bottom: 1px solid var(--border-color);">
+    <!-- Modern navigation -->
+    <nav class="position-fixed top-0 z-50 w-100 backdrop-blur-sm" style="background-color: rgba(var(--background-color-rgb), 0.8); border-bottom: 1px solid var(--border-color);">
         <div class="p-4">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
                     <div class="d-flex flex-column mr-4">
-                        <span class="text-xl font-semibold" style="color: var(--text-primary);">LocalChat</span>
-                        <span class="text-sm" style="color: var(--text-secondary);">Powered by AI</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="/static/AI.png" alt="AI Icon" class="w-6 h-6">
+                            <span class="text-xl font-semibold" style="color: var(--text-primary); letter-spacing: -0.025em;">The Answer 2.0</span>
+                        </div>
+                        <span class="text-sm" style="color: var(--text-secondary); font-weight: 500;">Powered by AI</span>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-4">
                     <nav class="nav-links">
-                        <a href="/" class="nav-link">Chat</a>
-                        <a href="/documents" class="nav-link active">Documents</a>
-                        <a href="/settings" class="nav-link">Settings</a>
-                        <button id="themeToggle" class="theme-toggle">
+                        <a href="/" class="nav-link">
+                            <i class="fas fa-comments mr-2"></i>
+                            Chat
+                        </a>
+                        <a href="/documents" class="nav-link active">
+                            <i class="fas fa-file-alt mr-2"></i>
+                            Documents
+                        </a>
+                        <a href="/settings" class="nav-link">
+                            <i class="fas fa-cog mr-2"></i>
+                            Settings
+                        </a>
+                        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
                             <i class="fas fa-moon"></i>
                             <i class="fas fa-sun hidden"></i>
                         </button>
@@ -78,7 +269,7 @@
         </div>
 
         <!-- Upload section -->
-        <div class="p-4 mb-4 rounded-lg shadow" style="background-color: var(--surface-color); border: 1px solid var(--border-color);">
+        <div class="upload-area p-4 mb-4">
             <div class="d-flex flex-column align-items-center justify-content-center gap-4">
                 <div class="text-4xl" style="color: var(--text-tertiary);">
                     <i class="fas fa-cloud-upload-alt"></i>
@@ -106,353 +297,35 @@
         <div id="error" class="hidden mb-4 p-4 rounded-lg" style="color: var(--color-error); background-color: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-error);"></div>
 
         <!-- Documents list -->
-        <div class="rounded-lg shadow mb-4" style="background-color: var(--surface-color); border: 1px solid var(--border-color);">
+        <div class="rounded-lg shadow-lg mb-4" style="background-color: var(--surface-color); border: 1px solid var(--border-color);">
             <div class="p-4 border-b" style="border-color: var(--border-color);">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h2>Your Documents</h2>
+                    <h2 class="text-xl font-semibold">Your Documents</h2>
                     <div class="d-flex align-items-center gap-3">
                         <div id="documentCount" style="color: var(--text-secondary); font-size: var(--font-size-sm);">0 documents</div>
-                        <button id="deleteAllDocs" class="btn btn-sm btn-outline" style="color: var(--color-error);">
-                            <i class="fas fa-trash mr-1"></i>
+                        <button id="deleteAllDocs" class="btn btn-sm btn-outline d-inline-flex align-items-center gap-2" style="color: var(--color-error);">
+                            <i class="fas fa-trash"></i>
                             Delete All
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div id="documentList" style="overflow: visible; max-height: none;">
+            <div id="documentList" class="divide-y divide-gray-200 dark:divide-gray-700">
                 <!-- Documents will be loaded here -->
             </div>
 
-            <div id="noDocuments" class="hidden p-4 text-center">
+            <div id="noDocuments" class="hidden p-8 text-center">
                 <div class="mb-4 text-4xl" style="color: var(--text-tertiary);">
                     <i class="fas fa-file-alt"></i>
                 </div>
-                <p class="mb-2">No documents uploaded yet</p>
+                <p class="mb-2 font-medium">No documents uploaded yet</p>
                 <p style="color: var(--text-secondary);">Upload documents to use them as context in your chats</p>
             </div>
         </div>
     </div>
 
     <script src="/static/js/theme.js"></script>
-    <script>
-        // Document management functionality
-        const fileInput = document.getElementById('fileInput');
-        const uploadButton = document.getElementById('uploadButton');
-        const selectedFiles = document.getElementById('selectedFiles');
-        const documentList = document.getElementById('documentList');
-        const documentCount = document.getElementById('documentCount');
-        const noDocuments = document.getElementById('noDocuments');
-        const error = document.getElementById('error');
-
-        // Handle file selection with modern UI updates
-        fileInput.addEventListener('change', function() {
-            const files = Array.from(this.files);
-            if (files.length > 0) {
-                selectedFiles.innerHTML = files.map(file => `
-                    <div class="d-flex align-items-center gap-2 p-2 rounded-lg mb-2" style="background-color: var(--surface-color-hover);">
-                        <i class="fas fa-file" style="color: var(--text-tertiary);"></i>
-                        <span class="truncate" style="color: var(--text-primary);">${file.name}</span>
-                    </div>
-                `).join('');
-                uploadButton.disabled = false;
-            } else {
-                selectedFiles.innerHTML = '';
-                uploadButton.disabled = true;
-            }
-        });
-
-        // Load documents with modern UI
-        async function loadDocuments() {
-            try {
-                const response = await fetch('/api/documents');
-                if (!response.ok) throw new Error('Failed to load documents');
-                const data = await response.json();
-                
-                documentCount.textContent = `${data.documents.length} document${data.documents.length !== 1 ? 's' : ''}`;
-                noDocuments.style.display = data.documents.length === 0 ? 'block' : 'none';
-                documentList.innerHTML = '';
-                
-                data.documents.forEach(doc => {
-                    const docDiv = document.createElement('div');
-                    docDiv.className = 'p-4 border-b';
-                    docDiv.style.borderColor = 'var(--border-color)';
-                    docDiv.style.transition = 'background-color var(--transition-fast) ease';
-                    docDiv.dataset.docId = doc.id;
-                    
-                    // Truncate content for preview
-                    const truncatedContent = doc.content.length > 500 
-                        ? doc.content.substring(0, 500) + '...' 
-                        : doc.content;
-                    
-                    // Escape HTML to prevent XSS
-                    const escapeHtml = (unsafe) => {
-                        return unsafe
-                            .replace(/&/g, "&amp;")
-                            .replace(/</g, "&lt;")
-                            .replace(/>/g, "&gt;")
-                            .replace(/"/g, "&quot;")
-                            .replace(/'/g, "&#039;");
-                    };
-                    
-                    const safeContent = escapeHtml(truncatedContent);
-                    
-                    // Create the inner content div
-                    const contentDiv = document.createElement('div');
-                    contentDiv.className = 'd-flex justify-content-between align-items-start gap-4';
-                    contentDiv.innerHTML = `
-                        <div style="flex: 1; max-width: calc(100% - 50px);">
-                            <div class="d-flex align-items-center gap-3 mb-2">
-                                <i class="fas fa-file-alt" style="color: var(--text-tertiary);"></i>
-                                <span style="font-weight: 500; color: var(--text-primary);">${escapeHtml(doc.metadata.filename || 'Untitled')}</span>
-                                <span class="p-1 rounded-full" style="font-size: var(--font-size-xs); background-color: var(--surface-color-hover); color: var(--text-secondary);">${escapeHtml(doc.metadata.content_type || 'text')}</span>
-                            </div>
-                            <button class="btn btn-sm btn-outline" onclick="toggleContent(this)" style="color: var(--text-secondary);">
-                                <i class="fas fa-chevron-down mr-1"></i>
-                                Show Content
-                            </button>
-                            <div class="document-preview hidden mt-2">${safeContent}</div>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline" onclick="deleteDocument('${doc.id}')" style="color: var(--color-error);">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    
-                    docDiv.appendChild(contentDiv);
-                    
-                    docDiv.addEventListener('mouseover', function() {
-                        this.style.backgroundColor = 'var(--surface-color-hover)';
-                    });
-                    
-                    docDiv.addEventListener('mouseout', function() {
-                        this.style.backgroundColor = 'transparent';
-                    });
-                    
-                    documentList.appendChild(docDiv);
-                });
-            } catch (e) {
-                error.textContent = `Error loading documents: ${e.message}`;
-                error.style.display = 'block';
-            }
-        }
-
-        // Toggle content visibility
-        function toggleContent(button) {
-            const preview = button.nextElementSibling;
-            const isHidden = preview.classList.contains('hidden');
-            
-            preview.classList.toggle('hidden');
-            button.innerHTML = isHidden
-                ? '<i class="fas fa-chevron-up mr-1"></i> Hide Content'
-                : '<i class="fas fa-chevron-down mr-1"></i> Show Content';
-        }
-
-        // Delete document with confirmation
-        async function deleteDocument(docId) {
-            if (!confirm('Are you sure you want to delete this document?')) return;
-            
-            try {
-                const response = await fetch(`/api/documents/${docId}`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response.ok) throw new Error('Failed to delete document');
-                await loadDocuments();
-            } catch (e) {
-                error.textContent = `Error deleting document: ${e.message}`;
-                error.style.display = 'block';
-            }
-        }
-
-        // Upload documents
-        uploadButton.addEventListener('click', async function() {
-            const files = fileInput.files;
-            if (!files.length) return;
-
-            const formData = new FormData();
-            for (let file of files) {
-                formData.append('files', file);
-            }
-
-            try {
-                const response = await fetch('/api/documents', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to upload documents');
-                }
-                
-                fileInput.value = '';
-                selectedFiles.innerHTML = '';
-                uploadButton.disabled = true;
-                
-                await loadDocuments();
-            } catch (e) {
-                error.textContent = `Error uploading documents: ${e.message}`;
-                error.style.display = 'block';
-            }
-        });
-
-        // Add click handler for delete all button
-        document.getElementById('deleteAllDocs').addEventListener('click', () => {
-            // Create and show confirmation dialog
-            const overlay = document.createElement('div');
-            overlay.className = 'dialog-overlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 999;
-            `;
-            
-            const dialog = document.createElement('div');
-            dialog.className = 'confirmation-dialog';
-            dialog.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: var(--surface-color);
-                padding: var(--spacing-md);
-                border-radius: var(--radius-md);
-                box-shadow: var(--shadow-md);
-                z-index: 1000;
-                max-width: 300px;
-                width: 90%;
-                border: 1px solid var(--border-color);
-            `;
-            
-            dialog.innerHTML = `
-                <div style="margin-bottom: 1rem; text-align: center;">
-                    <p style="margin-bottom: 0.5rem; color: var(--text-primary);">Delete All Documents?</p>
-                    <p style="font-size: 0.9em; color: var(--text-secondary);">This action cannot be undone. All documents will be permanently deleted.</p>
-                </div>
-                <div style="display: flex; justify-content: center; gap: 0.5rem;">
-                    <button class="btn btn-sm btn-outline dialog-button-cancel">Cancel</button>
-                    <button class="btn btn-sm dialog-button-confirm" style="background-color: var(--color-error); color: white;">Delete All</button>
-                </div>
-            `;
-            
-            document.body.appendChild(overlay);
-            document.body.appendChild(dialog);
-            
-            // Handle dialog buttons
-            const handleDeleteAll = async () => {
-                // Get all document IDs
-                const documents = Array.from(document.querySelectorAll('div[data-doc-id]')).map(item => item.dataset.docId).filter(Boolean);
-                
-                if (documents.length === 0) {
-                    overlay.remove();
-                    dialog.remove();
-                    return;
-                }
-                
-                // Remove dialog before starting deletion
-                overlay.remove();
-                dialog.remove();
-                
-                console.log(`Found ${documents.length} documents to delete:`, documents);
-                
-                // Show loading state
-                documentList.innerHTML = '<div class="p-4 text-center"><div class="loading-spinner d-inline-block"></div> Deleting all documents...</div>';
-                
-                let failedCount = 0;
-                
-                // Delete documents one by one since bulk delete is not supported
-                for (const docId of documents) {
-                    try {
-                        const response = await fetch(`/api/documents/${docId}`, {
-                            method: 'DELETE'
-                        });
-                        
-                        if (!response.ok) {
-                            failedCount++;
-                            console.error(`Failed to delete document ${docId}`);
-                        }
-                    } catch (e) {
-                        failedCount++;
-                        console.error(`Error deleting document ${docId}:`, e);
-                    }
-                }
-                
-                // Refresh the documents list
-                await loadDocuments();
-                
-                // Show appropriate message based on results
-                const successDiv = document.createElement('div');
-                successDiv.className = 'alert alert-success';
-                successDiv.style.cssText = `
-                    position: fixed;
-                    top: 1rem;
-                    right: 1rem;
-                    padding: 1rem;
-                    background-color: ${failedCount > 0 ? '#fff3cd' : '#d4edda'};
-                    color: ${failedCount > 0 ? '#856404' : '#155724'};
-                    border-radius: var(--radius-sm);
-                    z-index: 1000;
-                    animation: fadeIn 0.3s ease;
-                `;
-                
-                if (failedCount === 0) {
-                    successDiv.textContent = 'All documents deleted successfully';
-                } else if (failedCount === documents.length) {
-                    successDiv.textContent = 'Failed to delete documents';
-                } else {
-                    successDiv.textContent = `Deleted ${documents.length - failedCount} out of ${documents.length} documents`;
-                }
-                
-                document.body.appendChild(successDiv);
-                setTimeout(() => successDiv.remove(), 3000);
-            };
-            
-            const handleCancel = () => {
-                overlay.remove();
-                dialog.remove();
-            };
-            
-            // Add click handlers to dialog buttons
-            dialog.querySelector('.dialog-button-confirm').addEventListener('click', handleDeleteAll);
-            dialog.querySelector('.dialog-button-cancel').addEventListener('click', handleCancel);
-            
-            // Close dialog when clicking overlay
-            overlay.addEventListener('click', handleCancel);
-        });
-
-        // Add loading spinner styles if not already present
-        if (!document.querySelector('#spinnerStyles')) {
-            const style = document.createElement('style');
-            style.id = 'spinnerStyles';
-            style.textContent = `
-                .loading-spinner {
-                    width: 20px;
-                    height: 20px;
-                    border: 2px solid #f3f3f3;
-                    border-top: 2px solid var(--text-primary);
-                    border-radius: 50%;
-                    animation: spin 1s linear infinite;
-                }
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(-10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        // Initial load
-        loadDocuments();
-    </script>
+    <script src="/static/js/documents.js"></script>
 </body>
 </html> 
